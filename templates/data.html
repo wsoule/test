@@ -1,0 +1,52 @@
+{{define "title"}}Data Explorer — ngmi{{end}}
+
+{{define "content"}}
+<div class="page-wrap">
+
+  <div class="breadcrumb">
+    <a href="/" class="bc-link">ngmi</a>
+    <span class="bc-sep">/</span>
+    <span class="bc-current">data</span>
+  </div>
+
+  <div class="repo-header">
+    <div class="repo-title-row">
+      <h1 class="page-title mono">Data Explorer</h1>
+    </div>
+    <p class="repo-desc">Browse all tracked repos, pull requests, reviews, and users.</p>
+  </div>
+
+  <div class="tab-nav" id="tab-nav">
+    <button class="tab-btn active" id="tab-repos"
+            hx-get="/data/repos"
+            hx-target="#data-content"
+            onclick="setTab(this)">Repos</button>
+    <button class="tab-btn" id="tab-prs"
+            hx-get="/data/prs"
+            hx-target="#data-content"
+            onclick="setTab(this)">Pull Requests</button>
+    <button class="tab-btn" id="tab-reviews"
+            hx-get="/data/reviews"
+            hx-target="#data-content"
+            onclick="setTab(this)">Reviews</button>
+    <button class="tab-btn" id="tab-users"
+            hx-get="/data/users"
+            hx-target="#data-content"
+            onclick="setTab(this)">Users</button>
+  </div>
+
+  <div id="data-content">
+    {{template "data_repos" .}}
+  </div>
+
+</div>
+
+<script>
+function setTab(el) {
+  document.querySelectorAll('#tab-nav .tab-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  el.classList.add('active');
+}
+</script>
+{{end}}

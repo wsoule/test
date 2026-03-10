@@ -1,0 +1,78 @@
+{{define "title"}}Are AI Tools Making PRs Bigger? — ngmi{{end}}
+
+{{define "content"}}
+<article class="blog-post">
+
+  <div class="breadcrumb">
+    <a href="/" class="bc-link">ngmi</a>
+    <span class="bc-sep">/</span>
+    <span class="bc-current">blog</span>
+  </div>
+
+  <header class="blog-header">
+    <h1 class="blog-title">Are AI Tools Making PRs Bigger?</h1>
+    <p class="blog-byline">
+      ngmi.review
+      &nbsp;·&nbsp;
+      February 2026
+      &nbsp;·&nbsp;
+      <span class="blog-live-badge"><span class="blog-live-dot"></span>live data</span>
+    </p>
+  </header>
+
+  <!-- Live stats widget — polls every 30s, server-renders on first load -->
+  <div class="blog-live-wrap">
+    <div class="blog-live-header">
+      <span class="blog-live-label">Live snapshot</span>
+      <span class="blog-live-updated muted" id="blog-updated"></span>
+    </div>
+    <div id="blog-live-stats"
+         hx-get="/api/blog/stats"
+         hx-trigger="every 30s"
+         hx-swap="innerHTML"
+         hx-on::after-request="document.getElementById('blog-updated').textContent = 'updated ' + new Date().toLocaleTimeString()">
+      {{template "blog_stats" .}}
+    </div>
+  </div>
+
+  <!-- ── Prose sections ── -->
+
+  <section class="blog-section">
+    <h2>The Question</h2>
+    <p class="blog-prose">
+    </p>
+  </section>
+
+  <section class="blog-section">
+    <h2>What the Data Shows</h2>
+    <p class="blog-prose">
+    </p>
+  </section>
+
+  <section class="blog-section">
+    <h2>The AI Inflection Point</h2>
+    <p class="blog-prose">
+    </p>
+    <p class="blog-prose">
+      <a href="/stats" class="link">Explore the full interactive charts →</a>
+    </p>
+  </section>
+
+  <section class="blog-section">
+    <h2>What This Means for Review Time</h2>
+    <p class="blog-prose">
+    </p>
+  </section>
+
+  <section class="blog-section">
+    <h2>Methodology</h2>
+    <p class="blog-prose">
+      Data is collected from public GitHub repositories via the GitHub REST API. Only merged
+      pull requests are included in the timing calculations. Review time is measured from
+      PR open to PR merge. Repos with fewer than 3 merged PRs are excluded from leaderboards.
+      All raw data is browsable on the <a href="/data" class="link">data explorer</a>.
+    </p>
+  </section>
+
+</article>
+{{end}}

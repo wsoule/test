@@ -1,0 +1,29 @@
+{{define "content"}}
+<div class="breadcrumb">
+  <a href="/" class="bc-link">ngmi</a>
+  <span class="bc-sep">/</span>
+  <span class="bc-current">hi wall</span>
+</div>
+
+<div class="hi-wall-header">
+  <h1>hi wall</h1>
+  <p class="muted">pages where people said hi</p>
+</div>
+
+{{if .Pages}}
+<div class="hi-wall-list">
+  {{range $i, $p := .Pages}}
+  <a href="{{$p.Path}}" class="hi-wall-row">
+    <span class="hi-wall-rank muted">{{add $i 1}}</span>
+    <span class="hi-wall-label">{{$p.Label}}</span>
+    <span class="hi-wall-stats muted">
+      {{$p.TotalCount}} hi
+      {{if $p.TodayCount}}&nbsp;&middot;&nbsp;<span class="green">+{{$p.TodayCount}} today</span>{{end}}
+    </span>
+  </a>
+  {{end}}
+</div>
+{{else}}
+<p class="muted" style="padding:2rem 0;">no hi's yet. be the first on any page!</p>
+{{end}}
+{{end}}

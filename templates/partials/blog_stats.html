@@ -1,0 +1,47 @@
+{{define "blog_stats"}}
+<div class="blog-stats-grid">
+  <div class="blog-stat">
+    <span class="blog-stat-num">{{formatNumber .TotalPRs}}</span>
+    <span class="blog-stat-label">PRs analyzed</span>
+  </div>
+  <div class="blog-stat">
+    <span class="blog-stat-num">{{formatNumber .TotalRepos}}</span>
+    <span class="blog-stat-label">repos tracked</span>
+  </div>
+  <div class="blog-stat">
+    <span class="blog-stat-num">{{formatDuration .LiveStats.MedianSecs}}</span>
+    <span class="blog-stat-label">median review time</span>
+  </div>
+  <div class="blog-stat">
+    <span class="blog-stat-num">{{formatNumber .TotalReviews}}</span>
+    <span class="blog-stat-label">reviews logged</span>
+  </div>
+</div>
+
+<div class="blog-live-cols">
+  <div class="blog-live-col">
+    <p class="blog-lb-heading">Top reviewers</p>
+    <div class="blog-lb">
+      {{range .TopReviewers}}
+      <div class="blog-lb-row">
+        <span class="blog-lb-rank">{{rankBadge .Rank}}</span>
+        <span class="blog-lb-name"><a href="/user/{{.Name}}" class="link">{{.Name}}</a></span>
+        <span class="blog-lb-val">{{formatNumber .Count}} reviews</span>
+      </div>
+      {{end}}
+    </div>
+  </div>
+  <div class="blog-live-col">
+    <p class="blog-lb-heading">Fastest repos</p>
+    <div class="blog-lb">
+      {{range .TopSpeed}}
+      <div class="blog-lb-row">
+        <span class="blog-lb-rank">{{rankBadge .Rank}}</span>
+        <span class="blog-lb-name"><a href="/repo/{{.Name}}" class="link">{{.Name}}</a></span>
+        <span class="blog-lb-val">{{formatDuration .Value}} avg</span>
+      </div>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}

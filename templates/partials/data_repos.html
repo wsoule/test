@@ -1,0 +1,67 @@
+{{define "data_repos"}}
+<div>
+  <form class="data-filter-bar"
+        hx-get="/data/repos"
+        hx-target="#data-content"
+        hx-trigger="change, submit"
+        hx-push-url="false">
+    <input type="search" name="search" value="{{.Search}}" placeholder="Search repos…" class="data-filter-input">
+    <select name="sort" class="data-filter-select">
+      <option value=""      {{if eq .SortBy ""}}selected{{end}}>Sort: Most PRs</option>
+      <option value="stars" {{if eq .SortBy "stars"}}selected{{end}}>Sort: Stars</option>
+      <option value="speed" {{if eq .SortBy "speed"}}selected{{end}}>Sort: Fastest</option>
+      <option value="slow"  {{if eq .SortBy "slow"}}selected{{end}}>Sort: Slowest</option>
+    </select>
+    <select name="status" class="data-filter-select">
+      <option value=""        {{if eq .Status ""}}selected{{end}}>Status: All</option>
+      <option value="done"    {{if eq .Status "done"}}selected{{end}}>done</option>
+      <option value="syncing" {{if eq .Status "syncing"}}selected{{end}}>syncing</option>
+      <option value="pending" {{if eq .Status "pending"}}selected{{end}}>pending</option>
+    </select>
+    <input type="hidden" name="page" value="0">
+  </form>
+
+  <p class="data-count muted">
+    {{if .ReposTotal}}{{formatNumber .ReposTotal}} repos{{if .Search}} matching "{{.Search}}"{{end}}{{else}}No repos found.{{end}}
+  </p>
+
+  <div class="pr-table-wrap">
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Repo</th>
+          <th>Stars</th>
+          <th>Language</th>
+          <th>Merged PRs</th>
+          <th>Avg Time</th>
+          <th>Status</th>
+          <th>Last Synced</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Repos}}
+        <tr>
+          <td><a href="/repo/{{.Owner}}/{{.Name}}" class="link">{{.FullName}}</a></td>
+          <td>{{formatNumber .Stars}}</td>
+          <td>{{if .Language}}{{.Language}}{{else}}<span class="muted">—</span>{{end}}</td>
+          <td>{{formatNumber .MergedPRCount}}</td>
+          <td>{{formatDuration .AvgMergeTimeSecs}}</td>
+          <td class="{{if eq .SyncStatus "done"}}ok{{else if eq .SyncStatus "syncing"}}warn{{else}}muted{{end}}">{{.SyncStatus}}</td>
+          <td class="muted">{{timeAgo .LastSynced}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="7" class="muted" style="text-align:center;padding:1rem;">No repos found.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  {{if .ReposTotal}}
+  <div class="pagination">
+    {{if .HasPrev}}<button class="page-btn" hx-get="{{.PrevURL}}" hx-target="#data-content">← Prev</button>{{end}}
+    <span class="muted">{{add .Offset 1}}–{{add .Offset (len .Repos)}} of {{formatNumber .ReposTotal}}</span>
+    {{if .HasNext}}<button class="page-btn" hx-get="{{.NextURL}}" hx-target="#data-content">Next →</button>{{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}

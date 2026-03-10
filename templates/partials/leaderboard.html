@@ -1,0 +1,23 @@
+{{define "leaderboard"}}
+{{if .Entries}}
+<div class="board-rows">
+  {{range .Entries}}
+  <a
+    href="{{if or (eq $.Category "speed") (eq $.Category "graveyard") (eq $.Category "oneshot")}}/repo/{{.Name}}{{else}}/user/{{.Name}}{{end}}"
+    class="board-row"
+  >
+    <span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span>
+    {{if .Extra}}<img src="{{.Extra}}" class="board-avatar" alt="" />{{end}}
+    <span class="board-name mono">{{if or (eq $.Category "reviewers") (eq $.Category "gatekeepers") (eq $.Category "authors")}}@{{end}}{{.Name}}</span>
+    <span class="board-val">
+      {{if or (eq $.Category "speed") (eq $.Category "graveyard")}}{{formatDuration .Value}}
+      {{else if eq $.Category "oneshot"}}{{.Value}}% clean
+      {{else}}{{formatNumber .Count}}{{end}}
+    </span>
+  </a>
+  {{end}}
+</div>
+{{else}}
+<p class="board-empty">No data yet — search for repos to populate this.</p>
+{{end}}
+{{end}}

@@ -1,0 +1,323 @@
+{{define "title"}}@{{.User.Login}} — ngmi{{end}}
+
+{{define "content"}}
+<div class="page-wrap">
+
+  <!-- ── User Header ── -->
+  <div class="user-header">
+    {{if .User.AvatarURL}}
+    <img src="{{.User.AvatarURL}}" class="user-avatar" alt="@{{.User.Login}}" />
+    {{end}}
+    <div class="user-info">
+      <h1 class="page-title">
+        {{if .User.Name}}{{.User.Name}}{{else}}@{{.User.Login}}{{end}}
+        {{if .IsNGMI}}<span class="ngmi-stamp">ngmi</span>{{end}}
+      </h1>
+      <p class="user-login mono">@{{.User.Login}}</p>
+      {{if .User.Bio}}<p class="user-bio">{{.User.Bio}}</p>{{end}}
+      <div class="user-meta">
+        {{if .User.Company}}<span class="meta-item">{{.User.Company}}</span>{{end}}
+        {{if .User.Location}}<span class="meta-item">{{.User.Location}}</span>{{end}}
+        {{if .User.Followers}}<span class="meta-item">{{formatNumber .User.Followers}} followers</span>{{end}}
+        {{if .User.PublicRepos}}<span class="meta-item">{{.User.PublicRepos}} repos</span>{{end}}
+        {{if and .ReviewerStats .ReviewerStats.LastReviewedAt}}
+        <span class="meta-item muted">last reviewed {{timeAgo .ReviewerStats.LastReviewedAt}}</span>
+        {{end}}
+      </div>
+    </div>
+    <a href="https://github.com/{{.User.Login}}" target="_blank" rel="noopener" class="btn btn-outline">GitHub ↗</a>
+  </div>
+
+  <!-- ── Verdict card ── -->
+  {{if not .ReviewerStats}}
+  <div class="verdict-card verdict-shame">
+    <p class="verdict-text">No reviews on record. ngmi.</p>
+  </div>
+  {{else if not (gt .ReviewerStats.TotalReviews 0)}}
+  <div class="verdict-card verdict-shame">
+    <p class="verdict-text">No reviews on record. ngmi.</p>
+  </div>
+  {{else}}
+  <div class="verdict-card">
+    {{if and (gt .ReviewerRank 0) (le .ReviewerRank 3)}}
+    <p class="verdict-text">#{{.ReviewerRank}} globally — {{formatNumber .ReviewerStats.TotalReviews}} reviews, {{percent .ReviewerStats.Approvals .ReviewerStats.TotalReviews}}% clean approvals. The rest? ngmi.</p>
+    {{else if and (gt .ReviewerRank 0) (le .ReviewerRank 100)}}
+    <p class="verdict-text">#{{.ReviewerRank}} globally — {{formatNumber .ReviewerStats.TotalReviews}} reviews, {{percent .ReviewerStats.Approvals .ReviewerStats.TotalReviews}}% approval rate.</p>
+    {{else if gt .ReviewerRank 0}}
+    <p class="verdict-text">#{{.ReviewerRank}} globally — {{formatNumber .ReviewerStats.TotalReviews}} reviews, {{percent .ReviewerStats.Approvals .ReviewerStats.TotalReviews}}% approval rate.</p>
+    {{else}}
+    <p class="verdict-text">{{formatNumber .ReviewerStats.TotalReviews}} reviews, {{percent .ReviewerStats.Approvals .ReviewerStats.TotalReviews}}% approval rate.{{if .IsNGMI}} Keep reviewing.{{end}}</p>
+    {{end}}
+    {{if .ShareURL}}
+    <div class="verdict-actions">
+      <a href="{{.ShareURL}}" target="_blank" rel="noopener" class="btn btn-sm btn-outline">Share on X →</a>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+
+  <!-- ── Global Ranks ── -->
+  {{if or .ReviewerRank (or .GatekeeperRank .AuthorRank)}}
+  <div class="rank-banner">
+    {{if .ReviewerRank}}
+    <div class="rank-pill">
+      <a href="/leaderboard/reviewers">#{{.ReviewerRank}} Reviewer</a>
+      <span class="rank-pill-sub">globally</span>
+    </div>
+    {{end}}
+    {{if .GatekeeperRank}}
+    <div class="rank-pill warn">
+      <a href="/leaderboard/gatekeepers">#{{.GatekeeperRank}} Gatekeeper</a>
+      <span class="rank-pill-sub">globally</span>
+    </div>
+    {{end}}
+    {{if .AuthorRank}}
+    <div class="rank-pill">
+      <a href="/leaderboard/authors">#{{.AuthorRank}} Author</a>
+      <span class="rank-pill-sub">globally</span>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+
+  <!-- ── Two-column stats ── -->
+  <div class="two-col">
+
+    <!-- As Reviewer -->
+    <div class="col-card">
+      <h2 class="col-title">As a Reviewer</h2>
+      {{if .ReviewerStats}}
+      {{with .ReviewerStats}}
+      <div class="col-stats">
+        <div class="col-stat">
+          <span class="col-stat-num">{{formatNumber .TotalReviews}}</span>
+          <span class="col-stat-label">Total Reviews</span>
+        </div>
+        <div class="col-stat">
+          <span class="col-stat-num green">{{formatNumber .Approvals}}</span>
+          <span class="col-stat-label">Approvals</span>
+        </div>
+        <div class="col-stat">
+          <span class="col-stat-num warn">{{formatNumber .ChangesRequested}}</span>
+          <span class="col-stat-label">Changes Requested</span>
+        </div>
+        <div class="col-stat">
+          <span class="col-stat-num muted">{{formatNumber .Comments}}</span>
+          <span class="col-stat-label">Comments</span>
+        </div>
+      </div>
+
+      {{if gt .TotalReviews 0}}
+      <div class="approval-bar-wrap">
+        <div class="approval-bar">
+          <div class="approval-fill" style="width:{{percent .Approvals .TotalReviews}}%"></div>
+        </div>
+        <span class="approval-label">{{percent .Approvals .TotalReviews}}% approval rate</span>
+      </div>
+      {{end}}
+      {{end}}
+      {{else}}
+      <p class="col-empty">No review data yet for this user.</p>
+      {{end}}
+    </div>
+
+    <!-- As Author -->
+    <div class="col-card">
+      <h2 class="col-title">As an Author</h2>
+      {{if .AuthorStats}}
+      {{with .AuthorStats}}
+      <div class="col-stats">
+        <div class="col-stat">
+          <span class="col-stat-num">{{formatNumber .MergedPRs}}</span>
+          <span class="col-stat-label">Merged PRs</span>
+        </div>
+        <div class="col-stat">
+          <span class="col-stat-num speed">{{formatDuration .AvgMergeTimeSecs}}</span>
+          <span class="col-stat-label">Avg Merge Time</span>
+        </div>
+        {{if gt .TotalPRs 0}}
+        <div class="col-stat">
+          <span class="col-stat-num">{{percent .MergedPRs .TotalPRs}}%</span>
+          <span class="col-stat-label">Merge Rate</span>
+        </div>
+        {{end}}
+        {{if gt .TotalLinesWritten 0}}
+        <div class="col-stat">
+          <span class="col-stat-num">{{formatNumber (int64ToInt .TotalLinesWritten)}}</span>
+          <span class="col-stat-label">Total Lines Written</span>
+        </div>
+        {{end}}
+        {{if gt .AvgPRSize 0.0}}
+        <div class="col-stat">
+          <span class="col-stat-num">{{formatNumber (floatToInt .AvgPRSize)}}</span>
+          <span class="col-stat-label">Avg PR Size (lines)</span>
+        </div>
+        {{end}}
+        {{if gt .CleanApprovalRate 0.0}}
+        <div class="col-stat">
+          <span class="col-stat-num green">{{printf "%.0f" .CleanApprovalRate}}%</span>
+          <span class="col-stat-label">Clean Approval Rate</span>
+        </div>
+        {{end}}
+        {{if gt .AvgChangesRequested 0.0}}
+        <div class="col-stat">
+          <span class="col-stat-num warn">{{printf "%.1f" .AvgChangesRequested}}×</span>
+          <span class="col-stat-label">Avg Changes Requested</span>
+        </div>
+        {{end}}
+        {{if gt .AvgFirstReviewSecs 0.0}}
+        <div class="col-stat">
+          <span class="col-stat-num">{{formatDuration (floatToInt64 .AvgFirstReviewSecs)}}</span>
+          <span class="col-stat-label">Avg Wait for First Review</span>
+        </div>
+        {{end}}
+      </div>
+      {{end}}
+      {{else}}
+      <p class="col-empty">No PR author data yet for this user.</p>
+      {{end}}
+    </div>
+
+  </div><!-- /two-col -->
+
+  <!-- ── Personal Records ── -->
+  {{if or .FastestPR .SlowestPR}}
+  <section class="section">
+    <h2 class="section-title">Personal Records</h2>
+    <div class="two-col">
+      {{if .FastestPR}}
+      <div class="col-card">
+        <h3 class="col-title">Fastest Merge</h3>
+        <div class="col-stats">
+          <div class="col-stat">
+            <span class="col-stat-num speed">{{formatDuration .FastestPR.MergeTimeSecs}}</span>
+            <span class="col-stat-label">merge time</span>
+          </div>
+        </div>
+        <a href="https://github.com/{{.FastestPR.RepoFullName}}/pull/{{.FastestPR.Number}}"
+           target="_blank" rel="noopener" class="pr-link mono record-pr-title">
+          {{.FastestPR.RepoFullName}} #{{.FastestPR.Number}}
+        </a>
+        <p class="record-pr-desc">{{.FastestPR.Title}}</p>
+      </div>
+      {{end}}
+      {{if .SlowestPR}}
+      <div class="col-card">
+        <h3 class="col-title">Slowest Merge</h3>
+        <div class="col-stats">
+          <div class="col-stat">
+            <span class="col-stat-num slow">{{formatDuration .SlowestPR.MergeTimeSecs}}</span>
+            <span class="col-stat-label">merge time</span>
+          </div>
+        </div>
+        <a href="https://github.com/{{.SlowestPR.RepoFullName}}/pull/{{.SlowestPR.Number}}"
+           target="_blank" rel="noopener" class="pr-link mono record-pr-title">
+          {{.SlowestPR.RepoFullName}} #{{.SlowestPR.Number}}
+        </a>
+        <p class="record-pr-desc">{{.SlowestPR.Title}}</p>
+      </div>
+      {{end}}
+    </div>
+  </section>
+  {{end}}
+
+  <!-- ── Charts (lazy-loaded) ── -->
+  <div id="user-charts"
+    hx-get="/api/user/{{.User.Login}}/charts"
+    hx-trigger="load"
+    hx-swap="outerHTML"></div>
+
+  <!-- ── Collaborators ── -->
+  {{if or .ReviewersOfMe .AuthorsIReview}}
+  <section class="section">
+    <h2 class="section-title">Collaborators</h2>
+    <div class="two-col">
+
+      {{if .ReviewersOfMe}}
+      <div class="col-card">
+        <h3 class="col-title">Reviews my PRs most</h3>
+        <div class="board-rows">
+          {{range $i, $c := .ReviewersOfMe}}
+          <a href="/user/{{$c.Login}}" class="board-row">
+            <span class="board-rank {{rankClass (add $i 1)}}">{{rankBadge (add $i 1)}}</span>
+            {{if $c.AvatarURL}}<img src="{{$c.AvatarURL}}" class="board-avatar" alt="" />{{end}}
+            <span class="board-name mono">@{{$c.Login}}</span>
+            <span class="board-val">{{formatNumber $c.Count}} reviews</span>
+          </a>
+          {{end}}
+        </div>
+      </div>
+      {{end}}
+
+      {{if .AuthorsIReview}}
+      <div class="col-card">
+        <h3 class="col-title">I review most</h3>
+        <div class="board-rows">
+          {{range $i, $c := .AuthorsIReview}}
+          <a href="/user/{{$c.Login}}" class="board-row">
+            <span class="board-rank {{rankClass (add $i 1)}}">{{rankBadge (add $i 1)}}</span>
+            {{if $c.AvatarURL}}<img src="{{$c.AvatarURL}}" class="board-avatar" alt="" />{{end}}
+            <span class="board-name mono">@{{$c.Login}}</span>
+            <span class="board-val">{{formatNumber $c.Count}} reviews</span>
+          </a>
+          {{end}}
+        </div>
+      </div>
+      {{end}}
+
+    </div>
+  </section>
+  {{end}}
+
+  <!-- ── Top Reviewed Repos ── -->
+  {{if .ReviewedRepos}}
+  <section class="section">
+    <h2 class="section-title">Repos Reviewed Most</h2>
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Repository</th>
+          <th>Reviews Given</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .ReviewedRepos}}
+        <tr class="pr-row">
+          <td><a href="/repo/{{.FullName}}" class="pr-link mono">{{.FullName}}</a></td>
+          <td>{{formatNumber .Count}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </section>
+  {{end}}
+
+  <!-- ── Contributed Repos (authored) ── -->
+  {{if .ContributedRepos}}
+  <section class="section">
+    <h2 class="section-title">Repos Contributed To</h2>
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Repository</th>
+          <th>Merged PRs</th>
+          <th>Avg Merge Time</th>
+          <th>Fastest</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .ContributedRepos}}
+        <tr class="pr-row">
+          <td><a href="/repo/{{.FullName}}" class="pr-link mono">{{.FullName}}</a></td>
+          <td>{{formatNumber .MergedPRCount}}</td>
+          <td><span class="time-chip {{if lt .AvgMergeTimeSecs 86400}}speed{{else if gt .AvgMergeTimeSecs 2592000}}slow{{end}}">{{formatDuration .AvgMergeTimeSecs}}</span></td>
+          <td class="speed">{{formatDuration .MinMergeTimeSecs}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </section>
+  {{end}}
+
+</div>
+{{end}}

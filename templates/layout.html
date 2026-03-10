@@ -1,0 +1,82 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{block "title" .}}ngmi — PR Review Leaderboards{{end}}</title>
+  {{if .OGDesc}}
+  <meta name="description" content="{{.OGDesc}}" />
+  {{else}}
+  <meta name="description" content="Global leaderboards for GitHub PR review time. Track speed, reviewers, and merge stats across any public repo." />
+  {{end}}
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ngmi" />
+  <meta property="og:title" content="{{if .OGTitle}}{{.OGTitle}}{{else}}ngmi — PR Review Leaderboards{{end}}" />
+  <meta property="og:description" content="{{if .OGDesc}}{{.OGDesc}}{{else}}Global leaderboards for GitHub PR review time. If you aren't reviewing, you're ngmi.{{end}}" />
+  <meta property="og:url" content="{{if .OGUrl}}{{.OGUrl}}{{else}}https://ngmi.review{{end}}" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="{{if .OGTitle}}{{.OGTitle}}{{else}}ngmi — PR Review Leaderboards{{end}}" />
+  <meta name="twitter:description" content="{{if .OGDesc}}{{.OGDesc}}{{else}}Global leaderboards for GitHub PR review time. If you aren't reviewing, you're ngmi.{{end}}" />
+
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/css/app.css" />
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <a href="/" class="nav-logo">
+      <span>ngmi</span>
+    </a>
+    <div class="nav-links">
+      <a href="/stats" class="nav-link">Stats</a>
+      <a href="/blog" class="nav-link">Blog</a>
+      {{if .CurrentUser}}
+        <a href="/dashboard" class="nav-link">Dashboard</a>
+        <form method="POST" action="/auth/logout" style="display:inline;margin:0;">
+          <button type="submit" class="nav-link" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:inherit;">Logout</button>
+        </form>
+      {{else}}
+        <a href="/auth/login" class="nav-link">Login</a>
+      {{end}}
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main>
+    {{template "content" .}}
+  </main>
+
+  <!-- Hi wall -->
+  <div
+    id="hi-widget"
+    class="hi-widget"
+    hx-get="/api/hi"
+    hx-trigger="load"
+    hx-vals="js:{path: window.location.pathname}"
+  ></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>
+      <span class="footer-logo">ngmi</span>
+      &nbsp;·&nbsp;
+      If you aren't reviewing, you're ngmi.
+      &nbsp;·&nbsp;
+      <a href="https://ngmi.review" class="footer-link">ngmi.review</a>
+      <a href="/data" class="nav-link">Data</a>
+      <a href="https://github.com/hydrogen-app/in-review" target="_blank" rel="noopener" class="nav-link">GitHub ↗</a>
+    </p>
+  </footer>
+
+</body>
+</html>
+{{end}}

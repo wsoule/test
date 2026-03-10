@@ -1,0 +1,40 @@
+{{define "search_results"}}
+{{if eq (len .Results) 0}}
+  {{if .Query}}
+  <div class="sr-empty">No results for <strong>{{.Query}}</strong></div>
+  {{end}}
+{{else}}
+<div class="sr-list">
+  {{range .Results}}
+  <a
+    href="{{if eq .Type "repo"}}/repo/{{.FullName}}{{else if eq .Type "org"}}/org/{{.FullName}}{{else}}/user/{{.FullName}}{{end}}"
+    class="sr-item"
+  >
+    {{if .AvatarURL}}
+    <img src="{{.AvatarURL}}" class="sr-avatar" alt="" />
+    {{else}}
+    <span class="sr-icon">{{if eq .Type "repo"}}repo{{else if eq .Type "org"}}org{{else}}user{{end}}</span>
+    {{end}}
+
+    <div class="sr-body">
+      <div class="sr-name-row">
+        <span class="sr-name mono">{{.FullName}}</span>
+        <span class="sr-type-badge {{.Type}}">{{.Type}}</span>
+        {{if .Language}}<span class="sr-lang">{{.Language}}</span>{{end}}
+        {{if .Stars}}<span class="sr-stars">{{.Stars}} stars</span>{{end}}
+      </div>
+      {{if .Description}}<p class="sr-desc">{{.Description}}</p>{{end}}
+      {{if .IsCached}}
+      <div class="sr-stats">
+        {{if .MergedPRs}}<span class="sr-stat">{{.MergedPRs}} merged PRs</span>{{end}}
+        {{if .AvgMergeTime}}<span class="sr-stat">avg {{formatDuration .AvgMergeTime}}</span>{{end}}
+        {{if .SpeedRank}}<span class="sr-stat rank">#{{.SpeedRank}} speed rank</span>{{end}}
+      </div>
+      {{end}}
+    </div>
+    <span class="sr-arrow">→</span>
+  </a>
+  {{end}}
+</div>
+{{end}}
+{{end}}

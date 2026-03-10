@@ -1,0 +1,57 @@
+{{define "data_reviews"}}
+<div>
+  <form class="data-filter-bar"
+        hx-get="/data/reviews"
+        hx-target="#data-content"
+        hx-trigger="change, submit"
+        hx-push-url="false">
+    <input type="search" name="reviewer" value="{{.Reviewer}}" placeholder="Filter by reviewer…" class="data-filter-input">
+    <select name="state" class="data-filter-select">
+      <option value=""                    {{if eq .State ""}}selected{{end}}>State: All</option>
+      <option value="APPROVED"            {{if eq .State "APPROVED"}}selected{{end}}>APPROVED</option>
+      <option value="CHANGES_REQUESTED"   {{if eq .State "CHANGES_REQUESTED"}}selected{{end}}>CHANGES_REQUESTED</option>
+      <option value="COMMENTED"           {{if eq .State "COMMENTED"}}selected{{end}}>COMMENTED</option>
+    </select>
+    <input type="hidden" name="page" value="0">
+  </form>
+
+  <p class="data-count muted">
+    {{if .ReviewsTotal}}{{formatNumber .ReviewsTotal}} reviews{{if .Reviewer}} by "{{.Reviewer}}"{{end}}{{if .State}} · {{.State}}{{end}}{{else}}No reviews found.{{end}}
+  </p>
+
+  <div class="pr-table-wrap">
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Reviewer</th>
+          <th>Repo</th>
+          <th>PR #</th>
+          <th>State</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Reviews}}
+        <tr>
+          <td><a href="/user/{{.ReviewerLogin}}" class="link">{{.ReviewerLogin}}</a></td>
+          <td><a href="/repo/{{.RepoFullName}}" class="link">{{.RepoFullName}}</a></td>
+          <td class="muted">#{{.PRNumber}}</td>
+          <td class="{{if eq .State "APPROVED"}}ok{{else if eq .State "CHANGES_REQUESTED"}}red{{else}}muted{{end}}">{{.State}}</td>
+          <td class="muted">{{.SubmittedAt.Format "2006-01-02"}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="5" class="muted" style="text-align:center;padding:1rem;">No reviews found.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  {{if .ReviewsTotal}}
+  <div class="pagination">
+    {{if .HasPrev}}<button class="page-btn" hx-get="{{.PrevURL}}" hx-target="#data-content">← Prev</button>{{end}}
+    <span class="muted">{{add .Offset 1}}–{{add .Offset (len .Reviews)}} of {{formatNumber .ReviewsTotal}}</span>
+    {{if .HasNext}}<button class="page-btn" hx-get="{{.NextURL}}" hx-target="#data-content">Next →</button>{{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}

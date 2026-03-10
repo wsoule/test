@@ -1,0 +1,53 @@
+{{define "data_users"}}
+<div>
+  <form class="data-filter-bar"
+        hx-get="/data/users"
+        hx-target="#data-content"
+        hx-trigger="change, submit"
+        hx-push-url="false">
+    <input type="search" name="search" value="{{.Search}}" placeholder="Search by login or name…" class="data-filter-input">
+    <input type="hidden" name="page" value="0">
+  </form>
+
+  <p class="data-count muted">
+    {{if .UsersTotal}}{{formatNumber .UsersTotal}} users{{if .Search}} matching "{{.Search}}"{{end}}{{else}}No users found.{{end}}
+  </p>
+
+  <div class="pr-table-wrap">
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Login</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Followers</th>
+          <th>Repos</th>
+          <th>Location</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Users}}
+        <tr>
+          <td><a href="/user/{{.Login}}" class="link">{{.Login}}</a></td>
+          <td class="muted">{{if .Name}}{{.Name}}{{else}}—{{end}}</td>
+          <td class="muted">{{if .IsOrg}}org{{else}}user{{end}}</td>
+          <td>{{formatNumber .Followers}}</td>
+          <td class="muted">{{formatNumber .PublicRepos}}</td>
+          <td class="muted">{{if .Location}}{{.Location}}{{else}}—{{end}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="6" class="muted" style="text-align:center;padding:1rem;">No users found.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  {{if .UsersTotal}}
+  <div class="pagination">
+    {{if .HasPrev}}<button class="page-btn" hx-get="{{.PrevURL}}" hx-target="#data-content">← Prev</button>{{end}}
+    <span class="muted">{{add .Offset 1}}–{{add .Offset (len .Users)}} of {{formatNumber .UsersTotal}}</span>
+    {{if .HasNext}}<button class="page-btn" hx-get="{{.NextURL}}" hx-target="#data-content">Next →</button>{{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}
