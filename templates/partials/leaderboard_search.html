@@ -1,0 +1,49 @@
+{{define "leaderboard_search"}}
+{{if not .Empty}}
+<div class="lb-search-result">
+
+  {{if .NotTracked}}
+    <span class="muted">
+      {{if .Login}}@{{.Login}}{{else}}{{.Query}}{{end}}
+      is not on this leaderboard yet.
+    </span>
+    <a href="{{.TrackURL}}" class="link">Track them →</a>
+
+  {{else if .Login}}
+    {{/* ── User result ── */}}
+    {{if .AvatarURL}}<img src="{{.AvatarURL}}" class="reviewer-avatar" alt="" />{{end}}
+    <a href="/user/{{.Login}}" class="lb-search-name">@{{.Login}}</a>
+    {{if .Rank}}<span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span>{{end}}
+    <span class="lb-search-stats">
+      {{if eq .Category "reviewers"}}
+        {{formatNumber .TotalReviews}} reviews
+        · <span class="green">{{formatNumber .Approvals}} approved</span>
+        · <span class="warn">{{formatNumber .ChangesRequested}} blocked</span>
+      {{else if eq .Category "gatekeepers"}}
+        <span class="warn">{{formatNumber .ChangesRequested}} changes requested</span>
+        · {{formatNumber .TotalReviews}} total reviews
+      {{else if eq .Category "authors"}}
+        {{formatNumber .MergedPRs}} merged PRs
+        · avg {{formatDuration .AvgMergeTimeSecs}}
+      {{end}}
+    </span>
+
+  {{else if .FullName}}
+    {{/* ── Repo result ── */}}
+    <a href="/repo/{{.FullName}}" class="lb-search-name mono">{{.FullName}}</a>
+    {{if eq .Category "speed"}}
+      {{if .SpeedRank}}<span class="board-rank {{rankClass .SpeedRank}}">{{rankBadge .SpeedRank}} speed</span>{{end}}
+    {{else if eq .Category "graveyard"}}
+      {{if .GraveyardRank}}<span class="board-rank {{rankClass .GraveyardRank}}">{{rankBadge .GraveyardRank}} slowest</span>{{end}}
+    {{end}}
+    <span class="lb-search-stats">
+      avg {{formatDuration .AvgSecs}}
+      · fastest <span class="speed">{{formatDuration .MinSecs}}</span>
+      · slowest <span class="slow">{{formatDuration .MaxSecs}}</span>
+      · {{formatNumber .PRCount}} PRs
+    </span>
+
+  {{end}}
+</div>
+{{end}}
+{{end}}

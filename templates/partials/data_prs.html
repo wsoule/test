@@ -1,0 +1,64 @@
+{{define "data_prs"}}
+<div>
+  <form class="data-filter-bar"
+        hx-get="/data/prs"
+        hx-target="#data-content"
+        hx-trigger="change, submit"
+        hx-push-url="false">
+    <input type="search" name="repo"   value="{{.RepoFilter}}" placeholder="Filter by repo…"   class="data-filter-input">
+    <input type="search" name="author" value="{{.Author}}"     placeholder="Filter by author…" class="data-filter-input">
+    <select name="sort" class="data-filter-select">
+      <option value=""      {{if eq .SortBy ""}}selected{{end}}>Sort: Recent</option>
+      <option value="speed" {{if eq .SortBy "speed"}}selected{{end}}>Sort: Fastest</option>
+      <option value="slow"  {{if eq .SortBy "slow"}}selected{{end}}>Sort: Slowest</option>
+      <option value="size"  {{if eq .SortBy "size"}}selected{{end}}>Sort: Largest</option>
+    </select>
+    <input type="hidden" name="page" value="0">
+  </form>
+
+  <p class="data-count muted">
+    {{if .PRsTotal}}{{formatNumber .PRsTotal}} merged PRs{{if .RepoFilter}} in "{{.RepoFilter}}"{{end}}{{if .Author}} by "{{.Author}}"{{end}}{{else}}No PRs found.{{end}}
+  </p>
+
+  <div class="pr-table-wrap">
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Repo</th>
+          <th>#</th>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Merged</th>
+          <th>Time</th>
+          <th>Reviews</th>
+          <th>Size</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .PRs}}
+        <tr>
+          <td><a href="/repo/{{.RepoFullName}}" class="link">{{.RepoFullName}}</a></td>
+          <td class="muted">#{{.Number}}</td>
+          <td class="data-pr-title">{{.Title}}</td>
+          <td><a href="/user/{{.AuthorLogin}}" class="link">{{.AuthorLogin}}</a></td>
+          <td class="muted">{{if .MergedAt}}{{timeAgo .MergedAt}}{{else}}—{{end}}</td>
+          <td>{{if .MergeTimeSecs}}{{formatDuration (deref64 .MergeTimeSecs)}}{{else}}<span class="muted">—</span>{{end}}</td>
+          <td class="muted">{{.ReviewCount}}</td>
+          <td class="muted">{{add .Additions .Deletions}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="8" class="muted" style="text-align:center;padding:1rem;">No PRs found.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  {{if .PRsTotal}}
+  <div class="pagination">
+    {{if .HasPrev}}<button class="page-btn" hx-get="{{.PrevURL}}" hx-target="#data-content">← Prev</button>{{end}}
+    <span class="muted">{{add .Offset 1}}–{{add .Offset (len .PRs)}} of {{formatNumber .PRsTotal}}</span>
+    {{if .HasNext}}<button class="page-btn" hx-get="{{.NextURL}}" hx-target="#data-content">Next →</button>{{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}

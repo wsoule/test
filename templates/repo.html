@@ -1,0 +1,182 @@
+{{define "title"}}{{.Repo.FullName}} — ngmi{{end}}
+
+{{define "content"}}
+<div class="page-wrap">
+
+  <!-- ── Breadcrumb ── -->
+  <div class="breadcrumb">
+    <a href="/" class="bc-link">ngmi</a>
+    <span class="bc-sep">/</span>
+    <a href="{{if and .OwnerUser .OwnerUser.IsOrg}}/org/{{else}}/user/{{end}}{{.Repo.Owner}}" class="bc-link">{{.Repo.Owner}}</a>
+    <span class="bc-sep">/</span>
+    <span class="bc-current">{{.Repo.Name}}</span>
+  </div>
+
+  <!-- ── Repo Header ── -->
+  <div class="repo-header">
+    <div class="repo-title-row">
+      <h1 class="page-title mono">{{.Repo.FullName}}</h1>
+      {{if .Repo.Language}}
+      <span class="lang-badge">{{.Repo.Language}}</span>
+      {{end}}
+      {{if .Repo.Stars}}
+      <span class="stars-badge">{{formatNumber .Repo.Stars}} stars</span>
+      {{end}}
+    </div>
+    {{if .Repo.Description}}
+    <p class="repo-desc">{{.Repo.Description}}</p>
+    {{end}}
+
+    <!-- Sync status -->
+    <div class="sync-row">
+      {{if .IsSyncing}}
+      <span
+        class="sync-badge syncing"
+        hx-get="/api/sync-status/{{.Repo.Owner}}/{{.Repo.Name}}"
+        hx-trigger="every 2s"
+        hx-swap="outerHTML"
+      >⟳ Syncing…</span>
+      {{else}}
+      <span class="sync-badge done">✓ Synced {{timeAgo .Repo.LastSynced}}</span>
+      {{end}}
+      <button
+        class="btn btn-sm"
+        hx-post="/api/sync/{{.Repo.Owner}}/{{.Repo.Name}}"
+        hx-swap="none"
+        hx-on::after-request="window.location.reload()"
+      >↻ Sync Now</button>
+      {{if .ShareURL}}
+      <a href="{{.ShareURL}}" target="_blank" rel="noopener" class="btn btn-sm btn-outline">Share on X →</a>
+      {{end}}
+    </div>
+    <!-- README badge snippet -->
+    <div class="badge-snippet-wrap">
+      <span class="badge-snippet-label">README badge:</span>
+      <code class="badge-snippet">[![ngmi](https://ngmi.review/badge/{{.Repo.Owner}}/{{.Repo.Name}}.svg)](https://ngmi.review/repo/{{.Repo.Owner}}/{{.Repo.Name}})</code>
+      <button class="btn btn-sm btn-outline" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)">Copy</button>
+    </div>
+  </div>
+
+  <!-- ── Stats Grid ── -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-card-num">{{formatNumber .Repo.MergedPRCount}}</span>
+      <span class="stat-card-label">Merged PRs</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-num">{{formatDuration .Repo.AvgMergeTimeSecs}}</span>
+      <span class="stat-card-label">Avg Merge Time</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-num speed">{{formatDuration .Repo.MinMergeTimeSecs}}</span>
+      <span class="stat-card-label">Fastest PR</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-num slow">{{formatDuration .Repo.MaxMergeTimeSecs}}</span>
+      <span class="stat-card-label">Slowest PR</span>
+    </div>
+    {{if .SpeedRank}}
+    <div class="stat-card highlight">
+      <span class="stat-card-num">#{{.SpeedRank}}</span>
+      <span class="stat-card-label">Global Speed Rank</span>
+    </div>
+    {{end}}
+  </div>
+
+  <!-- ── Charts (lazy-loaded) ── -->
+  {{if .Repo.MergedPRCount}}
+  <div id="charts-container"
+    hx-get="/api/repo/{{.Repo.Owner}}/{{.Repo.Name}}/charts?trim={{.Trim}}"
+    hx-trigger="load"
+    hx-swap="outerHTML"></div>
+  {{end}}
+
+  <!-- ── Top Reviewers ── -->
+  {{if .TopReviewers}}
+  <section class="section">
+    <h2 class="section-title">Top Reviewers</h2>
+    <div class="reviewer-list">
+      {{range $i, $r := .TopReviewers}}
+      <a href="/user/{{$r.Login}}" class="reviewer-row">
+        <span class="reviewer-rank {{rankClass (add $i 1)}}">{{rankBadge (add $i 1)}}</span>
+        {{if $r.AvatarURL}}
+        <img src="{{$r.AvatarURL}}" class="reviewer-avatar" alt="@{{$r.Login}}" />
+        {{end}}
+        <div class="reviewer-info">
+          <span class="reviewer-name mono">@{{$r.Login}}</span>
+          <div class="reviewer-stats">
+            <span class="badge badge-blue">{{$r.TotalReviews}} reviews</span>
+            {{if $r.Approvals}}<span class="badge badge-green">✓ {{$r.Approvals}} approved</span>{{end}}
+            {{if $r.ChangesRequested}}<span class="badge badge-red">↺ {{$r.ChangesRequested}} blocked</span>{{end}}
+          </div>
+        </div>
+        <div class="reviewer-bars">
+          <div class="mini-bar">
+            <div class="mini-bar-fill green" style="width:{{percent $r.Approvals $r.TotalReviews}}%"></div>
+          </div>
+        </div>
+      </a>
+      {{end}}
+    </div>
+  </section>
+  {{end}}
+
+  <!-- ── Recent PRs ── -->
+  {{if .RecentPRs}}
+  <section class="section">
+    <h2 class="section-title">Recent Merged PRs</h2>
+    <div class="pr-table-wrap">
+      <table class="pr-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Time</th>
+            <th>Reviews</th>
+            <th>Blocks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .RecentPRs}}
+          <tr class="pr-row">
+            <td class="pr-num mono">#{{.Number}}</td>
+            <td class="pr-title">
+              <a href="https://github.com/{{.RepoFullName}}/pull/{{.Number}}" target="_blank" rel="noopener" class="pr-link">
+                {{.Title}}
+              </a>
+            </td>
+            <td class="pr-author">
+              <a href="/user/{{.AuthorLogin}}" class="pr-author-link mono">@{{.AuthorLogin}}</a>
+            </td>
+            <td class="pr-time">
+              {{if .MergeTimeSecs}}
+              <span class="time-chip {{if lt (deref64 .MergeTimeSecs) 86400}}speed{{else if gt (deref64 .MergeTimeSecs) 2592000}}slow{{end}}">
+                {{formatDuration (deref64 .MergeTimeSecs)}}
+              </span>
+              {{else}}—{{end}}
+            </td>
+            <td class="pr-reviews">{{.ReviewCount}}</td>
+            <td class="pr-blocks">
+              {{if .ChangesRequestedCount}}
+              <span class="badge badge-red">{{.ChangesRequestedCount}}×</span>
+              {{else}}
+              <span class="badge badge-green">✓</span>
+              {{end}}
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {{end}}
+
+  {{if and (eq (len .RecentPRs) 0) (not .IsSyncing)}}
+  <div class="empty-state">
+    <p>No data yet. Sync is in progress — check back in a moment.</p>
+  </div>
+  {{end}}
+
+</div>
+{{end}}

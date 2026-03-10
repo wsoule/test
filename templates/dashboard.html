@@ -1,0 +1,91 @@
+{{define "title"}}Dashboard — ngmi{{end}}
+
+{{define "content"}}
+<div class="container" style="max-width:860px;margin:0 auto;padding:2rem 1rem;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;">
+    {{if .AvatarURL}}
+    <img src="{{.AvatarURL}}" alt="@{{.Login}}" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--border);">
+    {{end}}
+    <div>
+      <h1 style="margin:0;font-size:1.5rem;">@{{.Login}}</h1>
+      <p style="margin:0.25rem 0 0;color:var(--muted);">Your dashboard</p>
+    </div>
+  </div>
+
+  {{if not .HasInstall}}
+  <!-- No installation yet -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:2rem;text-align:center;">
+    <h2 style="margin-top:0;">Connect your repos</h2>
+    <p style="color:var(--muted);max-width:480px;margin:0 auto 1.5rem;">
+      Install the GitHub App to select which repos you want to track.
+      You'll be able to pick individual repos — we only get access to the ones you choose.
+    </p>
+    <a href="{{.InstallURL}}" class="btn-primary" style="display:inline-block;padding:0.6rem 1.4rem;background:var(--accent);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">
+      Install GitHub App →
+    </a>
+  </div>
+  {{else}}
+
+  <!-- Tracked repos -->
+  <section style="margin-bottom:2.5rem;">
+    <h2 style="font-size:1.1rem;margin-bottom:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Tracked repos</h2>
+    {{if .TrackedRepos}}
+    <div style="display:flex;flex-direction:column;gap:0.5rem;">
+      {{range .TrackedRepos}}
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;">
+        <div>
+          <a href="/repo/{{.FullName}}" style="font-weight:600;color:var(--fg);">{{.FullName}}</a>
+          <span style="margin-left:0.75rem;color:var(--muted);font-size:0.85rem;">
+            {{.MergedPRCount}} merged PRs
+            {{if .LastSynced}}· synced {{timeAgo .LastSynced}}{{end}}
+          </span>
+        </div>
+        <span style="font-size:0.8rem;padding:0.2rem 0.6rem;border-radius:4px;
+          {{if eq .SyncStatus "done"}}background:#1a3a1a;color:#4caf50;
+          {{else if eq .SyncStatus "syncing"}}background:#2a2a1a;color:#ffc107;
+          {{else}}background:var(--card-alt);color:var(--muted);{{end}}">
+          {{.SyncStatus}}
+        </span>
+      </div>
+      {{end}}
+    </div>
+    {{else}}
+    <p style="color:var(--muted);">No repos tracked yet. Add one below.</p>
+    {{end}}
+  </section>
+
+  <!-- Available repos -->
+  {{if .AvailableRepos}}
+  <section>
+    <h2 style="font-size:1.1rem;margin-bottom:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;">Available repos</h2>
+    <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">
+      These repos are accessible via your GitHub App installation but not yet tracked.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:0.5rem;">
+      {{range .AvailableRepos}}
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;">
+        <span style="font-weight:600;">{{.}}</span>
+        <form method="POST" action="/api/repos/add" style="margin:0;">
+          <input type="hidden" name="repo" value="{{.}}">
+          <button type="submit" style="padding:0.3rem 0.8rem;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:0.85rem;font-weight:600;">
+            + Track
+          </button>
+        </form>
+      </div>
+      {{end}}
+    </div>
+  </section>
+  {{end}}
+
+  <!-- Add more repos via installation -->
+  <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--muted);font-size:0.9rem;">
+    Want to track more repos?
+    <a href="{{.InstallURL}}" style="color:var(--accent);">Update your GitHub App installation →</a>
+  </div>
+
+  {{end}}{{/* end HasInstall */}}
+
+</div>
+{{end}}

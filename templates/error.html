@@ -1,0 +1,18 @@
+{{define "title"}}Error — ngmi{{end}}
+
+{{define "content"}}
+<div class="page-wrap">
+  <div class="error-page">
+    <div class="error-code">{{.Code}}</div>
+    <h1 class="error-title">{{.Title}}</h1>
+    <p class="error-msg">{{.Message}}</p>
+    {{if .Detail}}<p class="error-detail mono">{{.Detail}}</p>{{end}}
+    <div class="error-actions">
+      <a href="/" class="btn">Back to home</a>
+      {{if .RetryURL}}
+      <a href="{{.RetryURL}}" class="btn btn-outline">Try again</a>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}

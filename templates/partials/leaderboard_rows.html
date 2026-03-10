@@ -1,0 +1,79 @@
+{{define "leaderboard_rows"}}
+
+{{/* ── Repo rows (speed / graveyard) ── */}}
+{{range .RepoRows}}
+<tr class="pr-row">
+  <td><span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span></td>
+  <td><a href="/repo/{{.FullName}}" class="pr-link mono">{{.FullName}}</a></td>
+  <td><span class="time-chip {{if lt .AvgSecs 86400}}speed{{else if gt .AvgSecs 2592000}}slow{{end}}">{{formatDuration .AvgSecs}}</span></td>
+  <td class="speed">{{formatDuration .MinSecs}}</td>
+  <td class="slow">{{formatDuration .MaxSecs}}</td>
+  <td class="muted">{{formatNumber .PRCount}}</td>
+</tr>
+{{end}}
+
+{{/* ── User rows (reviewers / gatekeepers) ── */}}
+{{if and .UserRows (or (eq .Category "reviewers") (eq .Category "gatekeepers"))}}
+{{range .UserRows}}
+<tr class="pr-row">
+  <td><span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span></td>
+  <td>
+    <a href="/user/{{.Login}}" class="lb-user-cell">
+      {{if .AvatarURL}}<img src="{{.AvatarURL}}" class="reviewer-avatar" alt="" />{{end}}
+      <span class="mono">@{{.Login}}</span>
+    </a>
+  </td>
+  <td class="fw-bold">{{formatNumber .Total}}</td>
+  <td class="green">{{formatNumber .Approvals}}</td>
+  <td class="warn">{{formatNumber .ChangesRequested}}</td>
+  <td class="muted">{{if gt .Total 0}}{{percent .Approvals .Total}}%{{else}}—{{end}}</td>
+</tr>
+{{end}}
+{{end}}
+
+{{/* ── Author rows (merge masters) ── */}}
+{{if and .UserRows (eq .Category "authors")}}
+{{range .UserRows}}
+<tr class="pr-row">
+  <td><span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span></td>
+  <td>
+    <a href="/user/{{.Login}}" class="lb-user-cell">
+      {{if .AvatarURL}}<img src="{{.AvatarURL}}" class="reviewer-avatar" alt="" />{{end}}
+      <span class="mono">@{{.Login}}</span>
+    </a>
+  </td>
+  <td class="fw-bold">{{formatNumber .MergedPRs}}</td>
+  <td>
+    {{if gt .AvgMergeTimeSecs 0}}
+    <span class="time-chip {{if lt .AvgMergeTimeSecs 86400}}speed{{else if gt .AvgMergeTimeSecs 2592000}}slow{{end}}">
+      {{formatDuration .AvgMergeTimeSecs}}
+    </span>
+    {{else}}—{{end}}
+  </td>
+</tr>
+{{end}}
+{{end}}
+
+{{/* ── Clean approval rows (one-shot heroes) ── */}}
+{{range .CleanRows}}
+<tr class="pr-row">
+  <td><span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span></td>
+  <td><a href="/repo/{{.FullName}}" class="pr-link mono">{{.FullName}}</a></td>
+  <td><span class="clean-rate-chip">{{.CleanPct}}% approved first try</span></td>
+  <td>{{formatDuration .AvgSecs}}</td>
+  <td class="muted">{{formatNumber .Total}}</td>
+</tr>
+{{end}}
+
+{{/* ── Sentinel: triggers next page load before scrolled into view ── */}}
+{{if .HasMore}}
+<tr
+  hx-get="/leaderboard/{{.Category}}/rows?offset={{.NextOffset}}"
+  hx-trigger="earlyIntersect once"
+  hx-swap="outerHTML"
+>
+  <td colspan="7" class="load-sentinel">loading…</td>
+</tr>
+{{end}}
+
+{{end}}

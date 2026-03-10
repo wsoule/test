@@ -1,0 +1,236 @@
+{{define "title"}}{{.Title}} — ngmi{{end}}
+
+{{define "content"}}
+<div class="page-wrap">
+
+  <div class="breadcrumb">
+    <a href="/" class="bc-link">ngmi</a>
+    <span class="bc-sep">/</span>
+    <span class="bc-current">{{.Title}}</span>
+  </div>
+
+  <div class="lb-page-header">
+    <div>
+      <h1 class="page-title">{{.Title}}</h1>
+      <p class="repo-desc">{{.Description}}</p>
+    </div>
+    <a href="/" class="btn btn-outline">Back to leaderboards</a>
+  </div>
+
+  <!-- ── Search ── -->
+  <div class="lb-search-wrap">
+    <input
+      type="text"
+      class="search-input"
+      name="q"
+      placeholder="{{if or (eq .Category "reviewers") (eq .Category "gatekeepers") (eq .Category "authors")}}Search by username…{{else}}Search by repo (owner/repo)…{{end}}"
+      autocomplete="off"
+      hx-get="/leaderboard/{{.Category}}/search"
+      hx-trigger="input changed delay:350ms"
+      hx-target="#lb-search-result"
+    />
+    <div id="lb-search-result"></div>
+  </div>
+
+  {{/* ── Repo table (speed / graveyard) ── */}}
+  {{if .RepoRows}}
+  <div class="pr-table-wrap">
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Repository</th>
+          <th>Avg Time</th>
+          <th>Fastest PR</th>
+          <th>Slowest PR</th>
+          <th>Merged PRs</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .RepoRows}}
+        <tr class="pr-row">
+          <td><span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span></td>
+          <td><a href="/repo/{{.FullName}}" class="pr-link mono">{{.FullName}}</a></td>
+          <td><span class="time-chip {{if lt .AvgSecs 86400}}speed{{else if gt .AvgSecs 2592000}}slow{{end}}">{{formatDuration .AvgSecs}}</span></td>
+          <td class="speed">{{formatDuration .MinSecs}}</td>
+          <td class="slow">{{formatDuration .MaxSecs}}</td>
+          <td class="muted">{{formatNumber .PRCount}}</td>
+        </tr>
+        {{end}}
+        {{if .HasMore}}
+        <tr
+          hx-get="/leaderboard/{{.Category}}/rows?offset={{.NextOffset}}"
+          hx-trigger="earlyIntersect once"
+          hx-swap="outerHTML"
+        >
+          <td colspan="6" class="load-sentinel">loading…</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+
+  {{/* ── User table (reviewers / gatekeepers) ── */}}
+  {{if and .UserRows (or (eq .Category "reviewers") (eq .Category "gatekeepers"))}}
+  <div class="pr-table-wrap">
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>User</th>
+          <th>{{if eq .Category "reviewers"}}Total Reviews{{else}}Changes Requested{{end}}</th>
+          <th>Approvals</th>
+          <th>Changes Requested</th>
+          <th>Approval Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .UserRows}}
+        <tr class="pr-row">
+          <td><span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span></td>
+          <td>
+            <a href="/user/{{.Login}}" class="lb-user-cell">
+              {{if .AvatarURL}}<img src="{{.AvatarURL}}" class="reviewer-avatar" alt="" />{{end}}
+              <span class="mono">@{{.Login}}</span>
+            </a>
+          </td>
+          <td class="fw-bold">{{formatNumber .Total}}</td>
+          <td class="green">{{formatNumber .Approvals}}</td>
+          <td class="warn">{{formatNumber .ChangesRequested}}</td>
+          <td class="muted">
+            {{if gt .Total 0}}{{percent .Approvals .Total}}%{{else}}—{{end}}
+          </td>
+        </tr>
+        {{end}}
+        {{if .HasMore}}
+        <tr
+          hx-get="/leaderboard/{{.Category}}/rows?offset={{.NextOffset}}"
+          hx-trigger="earlyIntersect once"
+          hx-swap="outerHTML"
+        >
+          <td colspan="6" class="load-sentinel">loading…</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+
+  {{/* ── Author table (merge masters) ── */}}
+  {{if and .UserRows (eq .Category "authors")}}
+  <div class="pr-table-wrap">
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Author</th>
+          <th>Merged PRs</th>
+          <th>Avg Merge Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .UserRows}}
+        <tr class="pr-row">
+          <td><span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span></td>
+          <td>
+            <a href="/user/{{.Login}}" class="lb-user-cell">
+              {{if .AvatarURL}}<img src="{{.AvatarURL}}" class="reviewer-avatar" alt="" />{{end}}
+              <span class="mono">@{{.Login}}</span>
+            </a>
+          </td>
+          <td class="fw-bold">{{formatNumber .MergedPRs}}</td>
+          <td>
+            {{if gt .AvgMergeTimeSecs 0}}
+            <span class="time-chip {{if lt .AvgMergeTimeSecs 86400}}speed{{else if gt .AvgMergeTimeSecs 2592000}}slow{{end}}">
+              {{formatDuration .AvgMergeTimeSecs}}
+            </span>
+            {{else}}—{{end}}
+          </td>
+        </tr>
+        {{end}}
+        {{if .HasMore}}
+        <tr
+          hx-get="/leaderboard/{{.Category}}/rows?offset={{.NextOffset}}"
+          hx-trigger="earlyIntersect once"
+          hx-swap="outerHTML"
+        >
+          <td colspan="4" class="load-sentinel">loading…</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+
+  {{/* ── Clean approval table (one-shot heroes) ── */}}
+  {{if .CleanRows}}
+  <div class="pr-table-wrap">
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Repository</th>
+          <th>Clean Rate</th>
+          <th>Avg Merge Time</th>
+          <th>Total PRs</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .CleanRows}}
+        <tr class="pr-row">
+          <td><span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span></td>
+          <td><a href="/repo/{{.FullName}}" class="pr-link mono">{{.FullName}}</a></td>
+          <td><span class="clean-rate-chip">{{.CleanPct}}% approved first try</span></td>
+          <td>{{formatDuration .AvgSecs}}</td>
+          <td class="muted">{{formatNumber .Total}}</td>
+        </tr>
+        {{end}}
+        {{if .HasMore}}
+        <tr
+          hx-get="/leaderboard/{{.Category}}/rows?offset={{.NextOffset}}"
+          hx-trigger="earlyIntersect once"
+          hx-swap="outerHTML"
+        >
+          <td colspan="5" class="load-sentinel">loading…</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+
+  {{if and (eq (len .RepoRows) 0) (eq (len .UserRows) 0) (eq (len .CleanRows) 0)}}
+  <div class="empty-state">
+    <p>No data yet. Search for repos to populate this leaderboard.</p>
+  </div>
+  {{end}}
+
+</div>
+
+<script>
+(function () {
+  var observed = new WeakSet();
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        io.unobserve(e.target);
+        htmx.trigger(e.target, 'earlyIntersect');
+      }
+    });
+  }, { rootMargin: '0px 0px 500px 0px' });
+
+  function observeSentinels() {
+    document.querySelectorAll('tr[hx-trigger^="earlyIntersect"]').forEach(function (el) {
+      if (!observed.has(el)) {
+        observed.add(el);
+        io.observe(el);
+      }
+    });
+  }
+
+  document.addEventListener('htmx:afterSettle', observeSentinels);
+  observeSentinels();
+})();
+</script>
+{{end}}

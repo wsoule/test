@@ -1,0 +1,238 @@
+{{define "content"}}
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-inner">
+<h1 class="hero-title">
+      If you aren't reviewing,<br />you're ngmi.
+    </h1>
+    <p class="hero-sub">
+      Global leaderboards for GitHub PR review time.<br />
+      Search any public repo, user, or org.
+    </p>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <div class="search-box">
+        <input
+          id="main-search"
+          type="text"
+          class="search-input"
+          placeholder="golang/go, torvalds, kubernetes…"
+          autofocus
+          autocomplete="off"
+          hx-get="/search"
+          hx-trigger="input changed delay:400ms, keyup[key=='Enter']"
+          hx-target="#search-results"
+          hx-vals='{"q": event.target.value}'
+          name="q"
+        />
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>
+
+    <!-- Quick pills -->
+    {{if or .PopularVisits .RecentVisits}}
+    <div class="quick-pills">
+      <span class="pill-label">Try:</span>
+      {{range .PopularVisits}}
+      <a href="{{.Path}}" class="pill pill-hot">{{.Label}}</a>
+      {{end}}
+      {{range .RecentVisits}}
+      <a href="{{.Path}}" class="pill">{{.Label}}</a>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+</section>
+
+<!-- ── Stats bar ─────────────────────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <span class="stat-num">{{formatNumber .TotalRepos}}</span>
+    <span class="stat-label">Repos Tracked</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num">{{formatNumber .TotalPRs}}</span>
+    <span class="stat-label">PRs Analyzed</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num">{{formatNumber .TotalReviews}}</span>
+    <span class="stat-label">Reviews Logged</span>
+  </div>
+</div>
+
+<!-- ── Leaderboards ───────────────────────────────────────────────────────────── -->
+<section class="leaderboards">
+  <div class="section-header">
+    <h2 class="section-title">Global Leaderboards</h2>
+    <p class="section-sub">Populated as repos are searched. <a href="#" class="link" onclick="event.preventDefault();document.getElementById('main-search').focus()">Add yours →</a></p>
+  </div>
+
+  <div class="board-grid">
+
+    <!-- Speed Demons -->
+    <div class="board-card">
+      <a href="/leaderboard/speed" class="board-header board-header-link">
+        <span class="board-emoji">FAST</span>
+        <div>
+          <h3 class="board-title">Speed Demons</h3>
+          <p class="board-desc">Fastest avg PR-to-merge time</p>
+        </div>
+        <span class="board-header-arrow">→</span>
+      </a>
+      <div class="board-rows">
+        {{if .SpeedDemons}}
+          {{range .SpeedDemons}}
+          <a href="/repo/{{.Name}}" class="board-row">
+            <span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span>
+            <span class="board-name mono">{{.Name}}</span>
+            <span class="board-val speed">{{formatDuration .Value}}</span>
+          </a>
+          {{end}}
+        {{else}}
+          <p class="board-empty">Syncing popular repos…</p>
+        {{end}}
+      </div>
+      <a href="/leaderboard/speed" class="board-view-all">View full leaderboard →</a>
+    </div>
+
+    <!-- PR Graveyard -->
+    <div class="board-card">
+      <a href="/leaderboard/graveyard" class="board-header board-header-link">
+        <span class="board-emoji">SLOW</span>
+        <div>
+          <h3 class="board-title">PR Graveyard</h3>
+          <p class="board-desc">Slowest avg PR-to-merge time</p>
+        </div>
+        <span class="board-header-arrow">→</span>
+      </a>
+      <div class="board-rows">
+        {{if .PRGraveyard}}
+          {{range .PRGraveyard}}
+          <a href="/repo/{{.Name}}" class="board-row">
+            <span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span>
+            <span class="board-name mono">{{.Name}}</span>
+            <span class="board-val slow">{{formatDuration .Value}}</span>
+          </a>
+          {{end}}
+        {{else}}
+          <p class="board-empty">Syncing popular repos…</p>
+        {{end}}
+      </div>
+      <a href="/leaderboard/graveyard" class="board-view-all">View full leaderboard →</a>
+    </div>
+
+    <!-- Review Champions -->
+    <div class="board-card">
+      <a href="/leaderboard/reviewers" class="board-header board-header-link">
+        <span class="board-emoji">TOP</span>
+        <div>
+          <h3 class="board-title">Review Champions</h3>
+          <p class="board-desc">Most reviews submitted, globally</p>
+        </div>
+        <span class="board-header-arrow">→</span>
+      </a>
+      <div class="board-rows">
+        {{if .ReviewChamps}}
+          {{range .ReviewChamps}}
+          <a href="/user/{{.Name}}" class="board-row">
+            <span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span>
+            {{if .Extra}}<img src="{{.Extra}}" class="board-avatar" alt="" />{{end}}
+            <span class="board-name mono">@{{.Name}}</span>
+            <span class="board-val">{{formatNumber .Count}} reviews</span>
+          </a>
+          {{end}}
+        {{else}}
+          <p class="board-empty">Syncing popular repos…</p>
+        {{end}}
+      </div>
+      <a href="/leaderboard/reviewers" class="board-view-all">View full leaderboard →</a>
+    </div>
+
+    <!-- Gatekeepers -->
+    <div class="board-card">
+      <a href="/leaderboard/gatekeepers" class="board-header board-header-link">
+        <span class="board-emoji">GATE</span>
+        <div>
+          <h3 class="board-title">Gatekeepers</h3>
+          <p class="board-desc">Most "Request Changes" sent</p>
+        </div>
+        <span class="board-header-arrow">→</span>
+      </a>
+      <div class="board-rows">
+        {{if .Gatekeepers}}
+          {{range .Gatekeepers}}
+          <a href="/user/{{.Name}}" class="board-row">
+            <span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span>
+            {{if .Extra}}<img src="{{.Extra}}" class="board-avatar" alt="" />{{end}}
+            <span class="board-name mono">@{{.Name}}</span>
+            <span class="board-val warn">{{formatNumber .Count}} blocks</span>
+          </a>
+          {{end}}
+        {{else}}
+          <p class="board-empty">Syncing popular repos…</p>
+        {{end}}
+      </div>
+      <a href="/leaderboard/gatekeepers" class="board-view-all">View full leaderboard →</a>
+    </div>
+
+    <!-- Merge Masters -->
+    <div class="board-card">
+      <a href="/leaderboard/authors" class="board-header board-header-link">
+        <span class="board-emoji">MERGE</span>
+        <div>
+          <h3 class="board-title">Merge Masters</h3>
+          <p class="board-desc">Authors with most merged PRs</p>
+        </div>
+        <span class="board-header-arrow">→</span>
+      </a>
+      <div class="board-rows">
+        {{if .MergeMasters}}
+          {{range .MergeMasters}}
+          <a href="/user/{{.Name}}" class="board-row">
+            <span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span>
+            {{if .Extra}}<img src="{{.Extra}}" class="board-avatar" alt="" />{{end}}
+            <span class="board-name mono">@{{.Name}}</span>
+            <span class="board-val">{{formatNumber .Count}} merged</span>
+          </a>
+          {{end}}
+        {{else}}
+          <p class="board-empty">Syncing popular repos…</p>
+        {{end}}
+      </div>
+      <a href="/leaderboard/authors" class="board-view-all">View full leaderboard →</a>
+    </div>
+
+    <!-- One-Shot Heroes -->
+    <div class="board-card">
+      <a href="/leaderboard/oneshot" class="board-header board-header-link">
+        <span class="board-emoji">CLEAN</span>
+        <div>
+          <h3 class="board-title">One-Shot Heroes</h3>
+          <p class="board-desc">PRs approved first try (no changes)</p>
+        </div>
+        <span class="board-header-arrow">→</span>
+      </a>
+      <div class="board-rows">
+        {{if .OneShot}}
+          {{range .OneShot}}
+          <a href="/repo/{{.Name}}" class="board-row">
+            <span class="board-rank {{rankClass .Rank}}">{{rankBadge .Rank}}</span>
+            <span class="board-name mono">{{.Name}}</span>
+            <span class="board-val green">{{.Value}}% clean</span>
+          </a>
+          {{end}}
+        {{else}}
+          <p class="board-empty">Syncing popular repos…</p>
+        {{end}}
+      </div>
+      <a href="/leaderboard/oneshot" class="board-view-all">View full leaderboard →</a>
+    </div>
+
+  </div><!-- /board-grid -->
+</section>
+
+{{end}}
